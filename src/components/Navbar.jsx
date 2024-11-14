@@ -22,7 +22,7 @@ function Navbar() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
          
           <a href="/" className="text-2xl font-bold text-black dark:text-white">
-            Task Manager
+            Task <span className="text-yellow-500">Manager</span>
           </a>
 
           <div className=" md:flex items-center space-x-4">
