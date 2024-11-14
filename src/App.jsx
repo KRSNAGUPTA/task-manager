@@ -19,7 +19,6 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
-
 import {
   Select,
   SelectContent,
@@ -29,10 +28,13 @@ import {
 } from "@/components/ui/select";
 import { Input } from "./components/ui/input";
 import DeleteOutlineSharpIcon from "@mui/icons-material/DeleteOutlineSharp";
-import { Button } from "@mui/material";
+// import { Button } from "@mui/material";
 import { Checkbox } from "./components/ui/checkbox";
 import { Label } from "./components/ui/label";
 import { Search } from "@mui/icons-material";
+import { Button } from "./components/ui/button";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const [taskList, setTaskList] = useState(() => {
@@ -83,19 +85,25 @@ function App() {
     setTaskName("");
     setTaskDesc("");
     setTaskPrio("");
+    toast.success("task added")
   };
   const deleteTask = (id) => {
     setTaskList(taskList.filter((task) => task.id != id));
+    toast.success("task deleted")
   };
   const toggleTask = (id) => {
-    taskList.filter((task) => (task.id === id ? (task.completed === true ? false : true) : ""));
+    setTaskList(
+      taskList.map((task) =>
+        task.id === id ? { ...task, completed: !task.completed } : task
+      )
+    );
   };
   return (
     <>
       <div className="max-h-screen p-0 m-0 ">
         <Navbar />
         <div className="flex justify-center mt-16 ">
-          <Card className="w-full max-w-md   mx-auto">
+          <Card className="w-full max-w-md mx-auto min-h-64">
             <CardHeader>
               <CardTitle>Manage Task</CardTitle>
             </CardHeader>
@@ -108,7 +116,11 @@ function App() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   // onChange={(e)=>console.log(e.target.value)}
                 />
-                <Button onClick={handleSearch}>
+                <Button
+                  variant="outline"
+                  className="border-none hover:shadow-inner"
+                  onClick={handleSearch}
+                >
                   <Search />
                 </Button>
                 <Dialog>
@@ -171,16 +183,19 @@ function App() {
                   </DialogContent>
                 </Dialog>
               </div>
-              <ul className="space-y-3 ">
+              <ul className="space-y-4 ">
                 {filteredTask.map((task) => (
                   <li key={task.id} className="">
-                    <div className="flex justify-between ">
-                      <div className="flex space-x-3 ">
+                    <div
+                      className="flex justify-between
+                     items-center "
+                    >
+                      <div className="flex space-x-3 items-center ">
                         <Checkbox
-                          checked={task.completed ? "true" : "false"}
+                          checked={task.completed ? true : false}
                           onCheckedChange={() => toggleTask(task.id)}
                         />
-                        <div className="mb-2 ">
+                        <div className="space-y-1">
                           <CardTitle
                             className={`${
                               task.completed ? "line-through text-muted" : ""
@@ -190,14 +205,18 @@ function App() {
                           </CardTitle>
                           <CardDescription
                             className={`${
-                              task.completed ? "line-through text-muted" : ""
+                              task.completed ? "text-muted line-through" : ""
                             }`}
                           >
                             {task.description}
                           </CardDescription>
                         </div>
                       </div>
-                      <Button onClick={() => deleteTask(task.id)}>
+                      <Button
+                        variant="outline"
+                        className="hover:text-red-600 border-none"
+                        onClick={() => deleteTask(task.id)}
+                      >
                         <DeleteOutlineSharpIcon />
                       </Button>
                     </div>
@@ -220,6 +239,7 @@ function App() {
             </CardFooter>
           </Card>
         </div>
+        <ToastContainer position="bottom-center"/>
       </div>
     </>
   );
