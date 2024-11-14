@@ -18,8 +18,6 @@ Follow these steps to set up and run the application locally:
 ### Tech Stack
 - **React**
 - **Tailwind CSS**
-- **ShadCN**
-- **React Toastify**
 
 [Vercel App](https://task-manager-phi-ebon.vercel.app/)
 
