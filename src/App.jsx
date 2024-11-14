@@ -40,6 +40,7 @@ import { Label } from "./components/ui/label";
 import { Search } from "@mui/icons-material";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { ScrollArea, ScrollBar } from "./components/ui/scroll-area";
 
 function App() {
   const [taskList, setTaskList] = useState(() => {
@@ -64,7 +65,7 @@ function App() {
       return matchFilter;
     });
 
-    const priorityOrder = { high: 3, medium: 2, low: 1 };
+    const priorityOrder = { high: 1, medium: 2, low: 3 };
 
     filtered.sort(
       (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
@@ -121,10 +122,10 @@ function App() {
 
   return (
     <>
-      <div className="max-h-screen p-0 m-0 bg-slate-200 dark:bg-neutral-950 h-screen">
+      <div className="h-screen bg-slate-200 dark:bg-neutral-950">
         <Navbar />
-        <div className="flex justify-center items-center px-4 sm:px-6 md:px-8 mt-36">
-          <Card className="w-full max-w-md mx-auto min-h-16 shadow-2xl">
+        <div className="flex justify-center items-center px-4 sm:px-6 md:px-8 mt-10">
+          <Card className="w-full max-w-md sm:max-w-2xl mx-auto min-h-16 shadow-2xl">
             <CardHeader>
               <CardTitle>Manage Task</CardTitle>
             </CardHeader>
@@ -132,7 +133,7 @@ function App() {
               <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-4 sm:space-y-0 justify-between">
                 <div className="flex w-full justify-between space-x-2">
                   <Input
-                    className="rounded-2xl px-4 border-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-yellow-700 dark:focus:ring-yellow-200 focus:ring-opacity-50 dark:focus:ring-opacity-70"
+                    className="rounded-2xl px-4 border-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-yellow-700 dark:focus:ring-yellow-200 focus:ring-opacity-50 dark:focus:ring-opacity-70 w-full"
                     type="text"
                     placeholder="Search"
                     value={searchTerm}
@@ -143,6 +144,7 @@ function App() {
                     variant="outline"
                     className="border-none hover:shadow-inner active:scale-75  "
                     onClick={handleSearch}
+                    aria-label="Search tasks"
                   >
                     <Search className="text-yellow-500 scale-150 " />
                   </Button>
@@ -170,6 +172,7 @@ function App() {
                             type="text"
                             placeholder="Enter Name"
                             value={taskName}
+                            maxLength={40}
                             onChange={(e) => setTaskName(e.target.value)}
                             required
                           />
@@ -180,14 +183,13 @@ function App() {
                             id="taskDesc"
                             type="text"
                             placeholder="Enter Description"
+                            maxLength={60}
                             onChange={(e) => setTaskDesc(e.target.value)}
                           />
                         </div>
                         <DialogFooter className="flex sm:justify-between">
                           <Select
-                            onValueChange={(val) =>
-                              setTaskPrio(val ? val : "low")
-                            }
+                            onValueChange={(val) => setTaskPrio(val || "low")}
                           >
                             <SelectTrigger className="w-[120px]">
                               <SelectValue placeholder="Priority" />
@@ -213,57 +215,69 @@ function App() {
                   </DialogContent>
                 </Dialog>
               </div>
-              <ul className="space-y-4">
-                {filteredTask.length === 0 && filter !== "completed" && !searchTerm
-                  ? "Your task list is waiting! Add a task to begin."
-                  : ""}
-                {filteredTask.map((task) => (
-                  <li key={task.id}>
-                    <div className="flex justify-between items-center">
-                      <div className="flex space-x-3 items-center">
-                        <Checkbox
-                          checked={task.completed ? true : false}
-                          onCheckedChange={() => toggleTask(task.id)}
-                        />
-                        <div className="space-y-1">
-                          <CardTitle
-                            className={`${
-                              task.completed ? "line-through text-gray-300" : ""
-                            }`}
-                          >
-                            <div className="flex items-center space-x-2">
-                              {task.priority === "high" && (
-                                <AlertTriangle className="text-red-500" />
-                              )}
-                              {task.priority === "medium" && (
-                                <AlertCircle className="text-yellow-500" />
-                              )}
-                              {task.priority === "low" && (
-                                <CheckCircle className="text-green-500" />
-                              )}
-                              <span>{task.name}</span>
-                            </div>
-                          </CardTitle>
-                          <CardDescription
-                            className={`${
-                              task.completed ? "line-through text-gray-300" : ""
-                            }`}
-                          >
-                            {task.description}
-                          </CardDescription>
+              <ScrollArea className="h-[300px] sm:h-auto w-full rounded-md border p-2">
+                <ul className="space-y-4">
+                  {filteredTask.length === 0 &&
+                  filter !== "completed" &&
+                  !searchTerm
+                    ? "Your task list is waiting! Add a task to begin."
+                    : ""}
+                  {filteredTask.map((task) => (
+                    <li key={task.id}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex space-x-3 items-center  ">
+                          <Checkbox
+                            checked={task.completed ? true : false}
+                            onCheckedChange={() => toggleTask(task.id)}
+                          />
+                          <div className="space-y-1 w-full">
+                            <CardTitle
+                              className={`${
+                                task.completed
+                                  ? "line-through text-gray-300"
+                                  : ""
+                              }`}
+                            >
+                              <div className="flex items-center space-x-2">
+                                {task.priority === "high" && (
+                                  <AlertTriangle className="text-red-500" />
+                                )}
+                                {task.priority === "medium" && (
+                                  <AlertCircle className="text-yellow-500" />
+                                )}
+                                {task.priority === "low" && (
+                                  <CheckCircle className="text-green-500" />
+                                )}
+                                <span>{task.name}</span>
+                              </div>
+                            </CardTitle>
+                            <CardDescription
+                              className={`${
+                                task.completed
+                                  ? "line-through text-gray-300"
+                                  : ""
+                              }`}
+                            > <p className="w-auto">
+
+                              {task.description}
+                            </p>
+                            </CardDescription>
+                          </div>
                         </div>
+                        <Button
+                          variant="outline"
+                          className="hover:text-red-600 border-none mr-2 z-10"
+                          onClick={() => deleteTask(task.id)}
+                          aria-label="Delete task"
+                        >
+                          <Trash2 />
+                        </Button>
                       </div>
-                      <Button
-                        variant="outline"
-                        className="hover:text-red-600 border-none"
-                        onClick={() => deleteTask(task.id)}
-                      >
-                        <Trash2 />
-                      </Button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                    </li>
+                  ))}
+                </ul>
+                <ScrollBar />
+              </ScrollArea>
             </CardContent>
             <CardFooter className="flex justify-end">
               <Select onValueChange={(val) => setFilter(val)}>
