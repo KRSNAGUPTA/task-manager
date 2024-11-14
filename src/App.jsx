@@ -28,11 +28,11 @@ import {
 } from "@/components/ui/select";
 import { Input } from "./components/ui/input";
 import DeleteOutlineSharpIcon from "@mui/icons-material/DeleteOutlineSharp";
-// import { Button } from "@mui/material";
+import { PriorityHigh, Warning, CheckCircle } from "@mui/icons-material";
+import { Button } from "./components/ui/button";
 import { Checkbox } from "./components/ui/checkbox";
 import { Label } from "./components/ui/label";
 import { Search } from "@mui/icons-material";
-import { Button } from "./components/ui/button";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -41,27 +41,32 @@ function App() {
     const savedTask = localStorage.getItem("taskList");
     return savedTask ? JSON.parse(savedTask) : [];
   });
-  useEffect(() => {
-    localStorage.setItem("taskList", JSON.stringify(taskList));
-  }, [taskList]);
+
   const [filter, setFilter] = useState("all");
   const [taskName, setTaskName] = useState("");
   const [taskDesc, setTaskDesc] = useState("");
-  const [taskPrio, setTaskPrio] = useState("");
+  const [taskPrio, setTaskPrio] = useState("low");
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredTask, setFilteredTask] = useState([]);
   const [baseFilteredTasks, setBaseFilteredTasks] = useState([]);
-  const [activeTaskCount, setActiveTaskCount] = useState(0);
+
   useEffect(() => {
-    let x = taskList.filter((task) => {
+    let filtered = taskList.filter((task) => {
       const matchFilter =
         (task.completed === false && filter === "active") ||
         (task.completed === true && filter === "completed") ||
         filter === "all";
       return matchFilter;
     });
-    setBaseFilteredTasks(x);
-    setFilteredTask(x);
+
+    const priorityOrder = { high: 3, medium: 2, low: 1 };
+
+    filtered.sort(
+      (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
+    );
+
+    setBaseFilteredTasks(filtered);
+    setFilteredTask(filtered);
   }, [taskList, filter]);
 
   const handleSearch = () => {
@@ -73,7 +78,12 @@ function App() {
     });
     setFilteredTask(afterSearch);
   };
+
   const addTask = () => {
+    if (!taskName) {
+      toast.error("You are forgetting task title");
+      return;
+    }
     const task = {
       id: taskList.length + 1,
       name: taskName,
@@ -85,12 +95,14 @@ function App() {
     setTaskName("");
     setTaskDesc("");
     setTaskPrio("");
-    toast.success("task added")
+    toast.success("task added");
   };
+
   const deleteTask = (id) => {
     setTaskList(taskList.filter((task) => task.id != id));
-    toast.success("task deleted")
+    toast.success("task deleted");
   };
+
   const toggleTask = (id) => {
     setTaskList(
       taskList.map((task) =>
@@ -98,6 +110,7 @@ function App() {
       )
     );
   };
+
   return (
     <>
       <div className="max-h-screen p-0 m-0 ">
@@ -114,7 +127,6 @@ function App() {
                   type="text"
                   placeholder="Search"
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  // onChange={(e)=>console.log(e.target.value)}
                 />
                 <Button
                   variant="outline"
@@ -125,7 +137,7 @@ function App() {
                 </Button>
                 <Dialog>
                   <DialogTrigger>
-                    <Button className="border-2">Add</Button>
+                    <Button variant="outline" className="border-2">Add</Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>Enter a new Task</DialogHeader>
@@ -185,12 +197,9 @@ function App() {
               </div>
               <ul className="space-y-4 ">
                 {filteredTask.map((task) => (
-                  <li key={task.id} className="">
-                    <div
-                      className="flex justify-between
-                     items-center "
-                    >
-                      <div className="flex space-x-3 items-center ">
+                  <li key={task.id}>
+                    <div className="flex justify-between items-center ">
+                      <div className={`flex space-x-3 items-center `}>
                         <Checkbox
                           checked={task.completed ? true : false}
                           onCheckedChange={() => toggleTask(task.id)}
@@ -201,7 +210,19 @@ function App() {
                               task.completed ? "line-through text-muted" : ""
                             }`}
                           >
-                            {task.name}
+                            <div className="flex items-center space-x-2">
+                              {task.priority === "high" && (
+                                <PriorityHigh className="text-red-500" />
+                              )}
+                              {task.priority === "medium" && (
+                                <Warning className="text-yellow-500" />
+                              )}
+                              {task.priority === "low" && (
+                                <CheckCircle className="text-green-500" />
+                              )}
+
+                              <span>{task.name}</span>
+                            </div>
                           </CardTitle>
                           <CardDescription
                             className={`${
@@ -225,7 +246,7 @@ function App() {
               </ul>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <div className="text-sm ">Task Left {activeTaskCount}</div>
+              <div className="text-sm ">Task Left</div>
               <Select onValueChange={(val) => setFilter(val)}>
                 <SelectTrigger className="w-[120px]">
                   <SelectValue placeholder="Filter" />
@@ -239,7 +260,7 @@ function App() {
             </CardFooter>
           </Card>
         </div>
-        <ToastContainer position="bottom-center"/>
+        <ToastContainer position="bottom-center" />
       </div>
     </>
   );
