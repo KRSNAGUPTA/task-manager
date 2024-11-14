@@ -43,6 +43,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { ScrollArea, ScrollBar } from "./components/ui/scroll-area";
 
 function App() {
+  document.title = "Task Manager";
   const [taskList, setTaskList] = useState(() => {
     const savedTask = localStorage.getItem("taskList");
     return savedTask ? JSON.parse(savedTask) : [];
