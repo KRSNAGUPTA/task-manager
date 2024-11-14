@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import Navbar from "./components/Navbar";
 import {
@@ -16,8 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogClose,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 
 import {
@@ -35,63 +35,67 @@ import { Label } from "./components/ui/label";
 import { Search } from "@mui/icons-material";
 
 function App() {
-  const task = [
-    {
-      id: 1,
-      name: "Task 1",
-      description: "This is a task description",
-      completed: false,
-      priority: "low",
-    },
-    {
-      id: 2,
-      name: "Task 2",
-      description: "This is a task description",
-      completed: false,
-      priority: "medium",
-    },
-    {
-      id: 3,
-      name: "Task 3",
-      description: "This is a task description",
-      completed: false,
-      priority: "high",
-    },
-    {
-      id: 4,
-      name: "Task 4",
-      description: "This is a task description",
-      completed: true,
-      priority: "low",
-    },
-    {
-      id: 5,
-      name: "Task 5",
-      description: "This is a task description",
-      completed: false,
-      priority: "medium",
-    },
-  ];
-  // const task = localStorage.getItem("task")
-
+  const [taskList, setTaskList] = useState(() => {
+    const savedTask = localStorage.getItem("taskList");
+    return savedTask ? JSON.parse(savedTask) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem("taskList", JSON.stringify(taskList));
+  }, [taskList]);
   const [filter, setFilter] = useState("all");
-  const [tasks, setTasks] = useState(task);
   const [taskName, setTaskName] = useState("");
   const [taskDesc, setTaskDesc] = useState("");
   const [taskPrio, setTaskPrio] = useState("");
-  const filteredTask = tasks.filter(
-    (task) =>
-      (task.completed === false && filter === "active") ||
-      (task.completed === true && filter === "completed") ||
-      filter === "all"
-  );
-  const addTask = () => {};
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredTask, setFilteredTask] = useState([]);
+  const [baseFilteredTasks, setBaseFilteredTasks] = useState([]);
+  const [activeTaskCount, setActiveTaskCount] = useState(0);
+  useEffect(() => {
+    let x = taskList.filter((task) => {
+      const matchFilter =
+        (task.completed === false && filter === "active") ||
+        (task.completed === true && filter === "completed") ||
+        filter === "all";
+      return matchFilter;
+    });
+    setBaseFilteredTasks(x);
+    setFilteredTask(x);
+  }, [taskList, filter]);
+
+  const handleSearch = () => {
+    const afterSearch = baseFilteredTasks.filter((task) => {
+      return (
+        task.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        task.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    });
+    setFilteredTask(afterSearch);
+  };
+  const addTask = () => {
+    const task = {
+      id: taskList.length + 1,
+      name: taskName,
+      description: taskDesc,
+      completed: false,
+      priority: taskPrio,
+    };
+    setTaskList([...taskList, task]);
+    setTaskName("");
+    setTaskDesc("");
+    setTaskPrio("");
+  };
+  const deleteTask = (id) => {
+    setTaskList(taskList.filter((task) => task.id != id));
+  };
+  const toggleTask = (id) => {
+    taskList.filter((task) => (task.id === id ? (task.completed === true ? false : true) : ""));
+  };
   return (
     <>
       <div className="max-h-screen p-0 m-0 ">
         <Navbar />
         <div className="flex justify-center mt-16 ">
-          <Card className="w-full max-w-md mx-auto">
+          <Card className="w-full max-w-md   mx-auto">
             <CardHeader>
               <CardTitle>Manage Task</CardTitle>
             </CardHeader>
@@ -101,8 +105,10 @@ function App() {
                   className="rounded-2xl px-4"
                   type="text"
                   placeholder="Search"
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  // onChange={(e)=>console.log(e.target.value)}
                 />
-                <Button>
+                <Button onClick={handleSearch}>
                   <Search />
                 </Button>
                 <Dialog>
@@ -122,7 +128,9 @@ function App() {
                             id="taskName"
                             type="text"
                             placeholder="Enter Name"
-                            onValueChange={(e) => setTaskName(e)}
+                            value={taskName}
+                            onChange={(e) => setTaskName(e.target.value)}
+                            required
                           />
                         </div>
                         <div className="space-y-2">
@@ -131,11 +139,11 @@ function App() {
                             id="taskDesc"
                             type="text"
                             placeholder="Enter Description"
-                            onValueChange={(e) => setTaskName(e)}
+                            onChange={(e) => setTaskDesc(e.target.value)}
                           />
                         </div>
                         <DialogFooter className="flex sm:justify-between">
-                          <Select>
+                          <Select onValueChange={(val) => setTaskPrio(val)}>
                             <SelectTrigger className="w-[120px]">
                               <SelectValue
                                 className="text-muted "
@@ -148,8 +156,15 @@ function App() {
                               <SelectItem value="high">High</SelectItem>
                             </SelectContent>
                           </Select>
-
-                          <Button>Add Task</Button>
+                          <DialogClose>
+                            <Button
+                              variant="outline"
+                              onClick={addTask}
+                              type="submit"
+                            >
+                              Add
+                            </Button>
+                          </DialogClose>
                         </DialogFooter>
                       </div>
                     </DialogHeader>
@@ -159,19 +174,39 @@ function App() {
               <ul className="space-y-3 ">
                 {filteredTask.map((task) => (
                   <li key={task.id} className="">
-                    <div className="flex flex-row space-x-3 ">
-                      <Checkbox />
-                      <div className="mb-2 ">
-                        <CardTitle>{task.name}</CardTitle>
-                        <CardDescription>{task.description}</CardDescription>
+                    <div className="flex justify-between ">
+                      <div className="flex space-x-3 ">
+                        <Checkbox
+                          checked={task.completed ? "true" : "false"}
+                          onCheckedChange={() => toggleTask(task.id)}
+                        />
+                        <div className="mb-2 ">
+                          <CardTitle
+                            className={`${
+                              task.completed ? "line-through text-muted" : ""
+                            }`}
+                          >
+                            {task.name}
+                          </CardTitle>
+                          <CardDescription
+                            className={`${
+                              task.completed ? "line-through text-muted" : ""
+                            }`}
+                          >
+                            {task.description}
+                          </CardDescription>
+                        </div>
                       </div>
+                      <Button onClick={() => deleteTask(task.id)}>
+                        <DeleteOutlineSharpIcon />
+                      </Button>
                     </div>
                   </li>
                 ))}
               </ul>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <div className="text-sm ">Task Left {filteredTask.length}</div>
+              <div className="text-sm ">Task Left {activeTaskCount}</div>
               <Select onValueChange={(val) => setFilter(val)}>
                 <SelectTrigger className="w-[120px]">
                   <SelectValue placeholder="Filter" />
