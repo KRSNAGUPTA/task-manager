@@ -14,7 +14,6 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
   DialogFooter,
   DialogTrigger,
   DialogClose,
@@ -27,8 +26,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "./components/ui/input";
-import DeleteOutlineSharpIcon from "@mui/icons-material/DeleteOutlineSharp";
-import { PriorityHigh, Warning, CheckCircle } from "@mui/icons-material";
+import {
+  PlusCircle,
+  Trash2,
+  AlertTriangle,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
+import { v4 as uuidv4 } from "uuid";
 import { Button } from "./components/ui/button";
 import { Checkbox } from "./components/ui/checkbox";
 import { Label } from "./components/ui/label";
@@ -78,6 +83,9 @@ function App() {
     });
     setFilteredTask(afterSearch);
   };
+  useEffect(() => {
+    localStorage.setItem("taskList", JSON.stringify(taskList));
+  }, [taskList]);
 
   const addTask = () => {
     if (!taskName) {
@@ -85,7 +93,7 @@ function App() {
       return;
     }
     const task = {
-      id: taskList.length + 1,
+      id: uuidv4(),
       name: taskName,
       description: taskDesc,
       completed: false,
@@ -113,39 +121,48 @@ function App() {
 
   return (
     <>
-      <div className="max-h-screen p-0 m-0 ">
+      <div className="max-h-screen p-0 m-0 bg-slate-200 dark:bg-neutral-950 h-screen">
         <Navbar />
-        <div className="flex justify-center mt-16 ">
-          <Card className="w-full max-w-md mx-auto min-h-64">
+        <div className="flex justify-center items-center px-4 sm:px-6 md:px-8 mt-36">
+          <Card className="w-full max-w-md mx-auto min-h-16 shadow-2xl">
             <CardHeader>
               <CardTitle>Manage Task</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex space-x-2">
-                <Input
-                  className="rounded-2xl px-4"
-                  type="text"
-                  placeholder="Search"
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <Button
-                  variant="outline"
-                  className="border-none hover:shadow-inner"
-                  onClick={handleSearch}
-                >
-                  <Search />
-                </Button>
+              <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-4 sm:space-y-0 justify-between">
+                <div className="flex w-full justify-between space-x-2">
+                  <Input
+                    className="rounded-2xl px-4 border-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-yellow-700 dark:focus:ring-yellow-200 focus:ring-opacity-50 dark:focus:ring-opacity-70"
+                    type="text"
+                    placeholder="Search"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+
+                  <Button
+                    variant="outline"
+                    className="border-none hover:shadow-inner active:scale-75  "
+                    onClick={handleSearch}
+                  >
+                    <Search className="text-yellow-500 scale-150 " />
+                  </Button>
+                </div>
                 <Dialog>
-                  <DialogTrigger>
-                    <Button variant="outline" className="border-2">Add</Button>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="border-2 rounded-full hover:text-yellow-600 dark:hover:text-yellow-300"
+                    >
+                      <PlusCircle /> Add Task
+                    </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>Enter a new Task</DialogHeader>
                     <DialogDescription>
                       Enter task name & description
                     </DialogDescription>
-                    <DialogHeader className="">
-                      <div className="space-y-4 ">
+                    <DialogHeader>
+                      <div className="space-y-4">
                         <div className="space-y-2">
                           <Label htmlFor="taskName">Task Name :</Label>
                           <Input
@@ -167,12 +184,13 @@ function App() {
                           />
                         </div>
                         <DialogFooter className="flex sm:justify-between">
-                          <Select onValueChange={(val) => setTaskPrio(val)}>
+                          <Select
+                            onValueChange={(val) =>
+                              setTaskPrio(val ? val : "low")
+                            }
+                          >
                             <SelectTrigger className="w-[120px]">
-                              <SelectValue
-                                className="text-muted "
-                                placeholder="Priority"
-                              />
+                              <SelectValue placeholder="Priority" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="low">Low</SelectItem>
@@ -195,11 +213,14 @@ function App() {
                   </DialogContent>
                 </Dialog>
               </div>
-              <ul className="space-y-4 ">
+              <ul className="space-y-4">
+                {filteredTask.length === 0 && filter !== "completed" && !searchTerm
+                  ? "Your task list is waiting! Add a task to begin."
+                  : ""}
                 {filteredTask.map((task) => (
                   <li key={task.id}>
-                    <div className="flex justify-between items-center ">
-                      <div className={`flex space-x-3 items-center `}>
+                    <div className="flex justify-between items-center">
+                      <div className="flex space-x-3 items-center">
                         <Checkbox
                           checked={task.completed ? true : false}
                           onCheckedChange={() => toggleTask(task.id)}
@@ -207,26 +228,25 @@ function App() {
                         <div className="space-y-1">
                           <CardTitle
                             className={`${
-                              task.completed ? "line-through text-muted" : ""
+                              task.completed ? "line-through text-gray-300" : ""
                             }`}
                           >
                             <div className="flex items-center space-x-2">
                               {task.priority === "high" && (
-                                <PriorityHigh className="text-red-500" />
+                                <AlertTriangle className="text-red-500" />
                               )}
                               {task.priority === "medium" && (
-                                <Warning className="text-yellow-500" />
+                                <AlertCircle className="text-yellow-500" />
                               )}
                               {task.priority === "low" && (
                                 <CheckCircle className="text-green-500" />
                               )}
-
                               <span>{task.name}</span>
                             </div>
                           </CardTitle>
                           <CardDescription
                             className={`${
-                              task.completed ? "text-muted line-through" : ""
+                              task.completed ? "line-through text-gray-300" : ""
                             }`}
                           >
                             {task.description}
@@ -238,17 +258,16 @@ function App() {
                         className="hover:text-red-600 border-none"
                         onClick={() => deleteTask(task.id)}
                       >
-                        <DeleteOutlineSharpIcon />
+                        <Trash2 />
                       </Button>
                     </div>
                   </li>
                 ))}
               </ul>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <div className="text-sm ">Task Left</div>
+            <CardFooter className="flex justify-end">
               <Select onValueChange={(val) => setFilter(val)}>
-                <SelectTrigger className="w-[120px]">
+                <SelectTrigger className="w-[120px] border-none hover:shadow-inner ">
                   <SelectValue placeholder="Filter" />
                 </SelectTrigger>
                 <SelectContent>
