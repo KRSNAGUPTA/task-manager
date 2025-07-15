@@ -5,7 +5,15 @@ import App from "./App.jsx";
 import { ThemeProvider } from "./context/ThemeContext";
 import { registerSW } from 'virtual:pwa-register';
 
-registerSW();
+registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    console.log('New content available, refresh the page!')
+  },
+  onOfflineReady() {
+    console.log('App is ready to work offline!')
+  },
+})
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
